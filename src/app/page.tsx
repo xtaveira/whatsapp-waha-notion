@@ -1,8 +1,10 @@
+import { SendMessage } from "./components/SendMessage";
+
 export default function Home() {
   return (
-    <main className="flex justify-center items-center">
-      <div className="bg-foreground">
-        <h2 className="text-background">oi</h2>
+    <main className="flex justify-center items-center h-screen">
+      <div className="bg-foreground p-4 rounded">
+        <SendMessage />
       </div>
     </main>
   );
