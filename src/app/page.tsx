@@ -3,18 +3,47 @@
 import React, { useEffect, useState } from "react";
 
 type Person = {
+  type: string;
   name: string;
   status: string;
-  groups: string[];
   whatsappLink?: string;
   instagramLink?: string;
+  messageName?: string;
 };
 
-function extractPhoneNumber(whatsappLink?: string) {
-  if (!whatsappLink) return "No number";
-  const match = whatsappLink.match(/phone=\+?(\d+)/);
-  return match ? match[1] : "No number";
-}
+const extractPhoneNumber = (whatsappLink?: string): string => {
+  if (!whatsappLink) {
+    return "No number";
+  }
+
+  try {
+    const url = new URL(whatsappLink);
+    let rawNumber: string | null = null;
+
+    const phoneParam = url.searchParams.get("phone");
+    if (phoneParam) {
+      rawNumber = phoneParam;
+    } else {
+      const pathNumber = url.pathname.replace("/", "");
+      if (/^\d+$/.test(pathNumber)) {
+        rawNumber = pathNumber;
+      }
+    }
+
+    if (rawNumber) {
+      return rawNumber.replace(/^\+/, "");
+    }
+
+    return "No number";
+  } catch (error) {
+    console.error(
+      "URL do WhatsApp inválida ou não reconhecida:",
+      whatsappLink,
+      error,
+    );
+    return "No number";
+  }
+};
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -47,8 +76,12 @@ export default function HomePage() {
         <thead>
           <tr className="bg-gray-100">
             <th className="border border-gray-300 px-3 py-2">Name</th>
+
+            <th className="border border-gray-300 px-3 py-2">Type</th>
+            <th className="border border-gray-300 px-3 py-2">
+              Nome p/ Mensagem
+            </th>
             <th className="border border-gray-300 px-3 py-2">Status</th>
-            <th className="border border-gray-300 px-3 py-2">Groups</th>
             <th className="border border-gray-300 px-3 py-2">
               WhatsApp Number
             </th>
@@ -57,13 +90,21 @@ export default function HomePage() {
         </thead>
         <tbody>
           {people.map(
-            ({ name, status, groups, whatsappLink, instagramLink }) => (
+            ({
+              type,
+              name,
+              messageName,
+              status,
+              whatsappLink,
+              instagramLink,
+            }) => (
               <tr key={name} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-3 py-2">{type}</td>
                 <td className="border border-gray-300 px-3 py-2">{name}</td>
-                <td className="border border-gray-300 px-3 py-2">{status}</td>
                 <td className="border border-gray-300 px-3 py-2">
-                  {groups.join(", ")}
+                  {messageName}
                 </td>
+                <td className="border border-gray-300 px-3 py-2">{status}</td>
                 <td className="border border-gray-300 px-3 py-2">
                   {extractPhoneNumber(whatsappLink)}
                 </td>

@@ -1,5 +1,5 @@
 Projeto: whatsapp-waha-notion
-Gerado em: Mon Jun 30 2025 08:24:44 GMT-0300 (Brasilia Standard Time)
+Gerado em: Mon Jun 30 2025 09:27:22 GMT-0300 (Brasilia Standard Time)
 
 // --- INÍCIO DO ARQUIVO: components.json ---
 {
@@ -269,51 +269,79 @@ class NotionService {
   public async listPeople(databaseId: string) {
     const response = await this.queryDatabase(databaseId);
 
-    return response.results
+    const customTypeOrder = [
+      "ganhando",
+      "discípulo",
+      "ovelha 99",
+      "consolidar",
+      "ganhar",
+      "oração",
+      "ovelha 1",
+    ];
+
+    const people = response.results
       .filter((page): page is PageObjectResponse => "properties" in page)
       .map((page) => {
         const props = page.properties;
 
-        const nameProp = props["Nome Inteiro"];
-        const statusProp = props["Status"];
-        const groupsProp = props["Groups"];
-        const whatsappProp = props["WhatsApp"];
-        const instagramProp = props["Instagram"];
+        const typeProp = props["Tipo"];
+        const type =
+          typeProp?.type === "select" ? typeProp.select?.name || "N/A" : "N/A";
 
+        const nameProp = props["Nome Inteiro"];
         const name =
           nameProp?.type === "title"
             ? nameProp.title.map((t) => t.plain_text).join("")
             : "No Name";
 
+        const statusProp = props["Situação"];
         const status =
           statusProp?.type === "select"
             ? statusProp.select?.name || "Unknown"
             : "Unknown";
 
-        // Assume groups é uma multi_select
-        const groups =
-          groupsProp?.type === "multi_select"
-            ? groupsProp.multi_select.map((g) => g.name)
-            : [];
-
+        const whatsappProp = props["Whatsapp"];
         const whatsappLink =
           whatsappProp?.type === "url"
             ? whatsappProp.url || undefined
             : undefined;
 
+        const instagramProp = props["Instagram"];
         const instagramLink =
           instagramProp?.type === "url"
             ? instagramProp.url || undefined
             : undefined;
 
+        const messageNameProp = props["MessageName"];
+        const messageName =
+          messageNameProp?.type === "rich_text"
+            ? messageNameProp.rich_text.map((t) => t.plain_text).join("")
+            : undefined;
+
         return {
+          type,
           name,
           status,
-          groups,
           whatsappLink,
           instagramLink,
+          messageName,
         };
       });
+
+    people.sort((a, b) => {
+      const rankA = customTypeOrder.indexOf(a.type);
+      const rankB = customTypeOrder.indexOf(b.type);
+
+      if (rankA !== rankB) {
+        if (rankA === -1) return 1;
+        if (rankB === -1) return -1;
+        return rankA - rankB;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+
+    return people;
   }
 }
 
@@ -576,18 +604,47 @@ export function SendMessage() {
 import React, { useEffect, useState } from "react";
 
 type Person = {
+  type: string;
   name: string;
   status: string;
-  groups: string[];
   whatsappLink?: string;
   instagramLink?: string;
+  messageName?: string;
 };
 
-function extractPhoneNumber(whatsappLink?: string) {
-  if (!whatsappLink) return "No number";
-  const match = whatsappLink.match(/phone=\+?(\d+)/);
-  return match ? match[1] : "No number";
-}
+const extractPhoneNumber = (whatsappLink?: string): string => {
+  if (!whatsappLink) {
+    return "No number";
+  }
+
+  try {
+    const url = new URL(whatsappLink);
+    let rawNumber: string | null = null;
+
+    const phoneParam = url.searchParams.get("phone");
+    if (phoneParam) {
+      rawNumber = phoneParam;
+    } else {
+      const pathNumber = url.pathname.replace("/", "");
+      if (/^\d+$/.test(pathNumber)) {
+        rawNumber = pathNumber;
+      }
+    }
+
+    if (rawNumber) {
+      return rawNumber.replace(/^\+/, "");
+    }
+
+    return "No number";
+  } catch (error) {
+    console.error(
+      "URL do WhatsApp inválida ou não reconhecida:",
+      whatsappLink,
+      error,
+    );
+    return "No number";
+  }
+};
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -620,8 +677,12 @@ export default function HomePage() {
         <thead>
           <tr className="bg-gray-100">
             <th className="border border-gray-300 px-3 py-2">Name</th>
+
+            <th className="border border-gray-300 px-3 py-2">Type</th>
+            <th className="border border-gray-300 px-3 py-2">
+              Nome p/ Mensagem
+            </th>
             <th className="border border-gray-300 px-3 py-2">Status</th>
-            <th className="border border-gray-300 px-3 py-2">Groups</th>
             <th className="border border-gray-300 px-3 py-2">
               WhatsApp Number
             </th>
@@ -630,13 +691,21 @@ export default function HomePage() {
         </thead>
         <tbody>
           {people.map(
-            ({ name, status, groups, whatsappLink, instagramLink }) => (
+            ({
+              type,
+              name,
+              messageName,
+              status,
+              whatsappLink,
+              instagramLink,
+            }) => (
               <tr key={name} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-3 py-2">{type}</td>
                 <td className="border border-gray-300 px-3 py-2">{name}</td>
-                <td className="border border-gray-300 px-3 py-2">{status}</td>
                 <td className="border border-gray-300 px-3 py-2">
-                  {groups.join(", ")}
+                  {messageName || name}
                 </td>
+                <td className="border border-gray-300 px-3 py-2">{status}</td>
                 <td className="border border-gray-300 px-3 py-2">
                   {extractPhoneNumber(whatsappLink)}
                 </td>
@@ -795,6 +864,34 @@ export async function GET(req: NextRequest) {
 
   try {
     const people = await notionService.listPeople(DATABASE_ID);
+
+    if (people && people.length > 0) {
+      const targetPerson = people.find((p) => p.name === "Eduarda Vieira");
+
+      if (targetPerson) {
+        console.log("🔬 RAIO-X DAS PROPRIEDADES (DADOS BRUTOS DO NOTION):");
+        console.log(targetPerson.rawProperties);
+
+        console.log("✅ TESTE DE INTEGRIDADE - REGISTRO 'Eduarda Vieira':");
+        console.log("---------------------------------------------------");
+        console.log(`👤 Nome: ${targetPerson.name}`);
+        console.log(`📊 Status: ${targetPerson.status}`);
+        console.log(
+          `📱 WhatsApp: ${targetPerson.whatsappLink || "Não informado"}`,
+        );
+        console.log(
+          `📸 Instagram: ${targetPerson.instagramLink || "Não informado"}`,
+        );
+        console.log("---------------------------------------------------");
+      } else {
+        console.log(
+          "⚠️  TESTE: A pessoa 'Eduarda Vieira' não foi encontrada nos resultados do Notion.",
+        );
+      }
+    } else {
+      console.log("⚠️  A busca no Notion não retornou nenhum registro.");
+    }
+
     return NextResponse.json(people);
   } catch (error) {
     console.error("Error fetching people:", error);

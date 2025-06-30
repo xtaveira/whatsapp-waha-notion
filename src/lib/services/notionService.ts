@@ -24,51 +24,83 @@ class NotionService {
   public async listPeople(databaseId: string) {
     const response = await this.queryDatabase(databaseId);
 
-    return response.results
+    const customTypeOrder = [
+      "ganhando",
+      "discípulo",
+      "ovelha 99",
+      "consolidar",
+      "ganhar",
+      "oração",
+      "ovelha 1",
+    ];
+
+    const people = response.results
       .filter((page): page is PageObjectResponse => "properties" in page)
       .map((page) => {
         const props = page.properties;
 
-        const nameProp = props["Nome Inteiro"];
-        const statusProp = props["Status"];
-        const groupsProp = props["Groups"];
-        const whatsappProp = props["WhatsApp"];
-        const instagramProp = props["Instagram"];
+        const typeProp = props["Tipo"];
+        const type =
+          typeProp?.type === "select" ? typeProp.select?.name || "N/A" : "N/A";
 
+        const nameProp = props["Nome Inteiro"];
         const name =
           nameProp?.type === "title"
             ? nameProp.title.map((t) => t.plain_text).join("")
             : "No Name";
 
+        const statusProp = props["Situação"];
         const status =
           statusProp?.type === "select"
             ? statusProp.select?.name || "Unknown"
             : "Unknown";
 
-        // Assume groups é uma multi_select
-        const groups =
-          groupsProp?.type === "multi_select"
-            ? groupsProp.multi_select.map((g) => g.name)
-            : [];
-
+        const whatsappProp = props["Whatsapp"];
         const whatsappLink =
           whatsappProp?.type === "url"
             ? whatsappProp.url || undefined
             : undefined;
 
+        const instagramProp = props["Instagram"];
         const instagramLink =
           instagramProp?.type === "url"
             ? instagramProp.url || undefined
             : undefined;
 
+        const messageNameProp = props["MessageName"];
+        const rawMessageName =
+          messageNameProp?.type === "rich_text"
+            ? messageNameProp.rich_text.map((t) => t.plain_text).join("")
+            : undefined;
+        const messageName =
+          rawMessageName && rawMessageName.trim()
+            ? rawMessageName
+            : name.split(" ")[0];
+
         return {
+          type,
           name,
           status,
-          groups,
           whatsappLink,
           instagramLink,
+          messageName,
         };
       });
+
+    people.sort((a, b) => {
+      const rankA = customTypeOrder.indexOf(a.type);
+      const rankB = customTypeOrder.indexOf(b.type);
+
+      if (rankA !== rankB) {
+        if (rankA === -1) return 1;
+        if (rankB === -1) return -1;
+        return rankA - rankB;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+
+    return people;
   }
 }
 

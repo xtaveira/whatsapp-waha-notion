@@ -10,6 +10,34 @@ export async function GET(req: NextRequest) {
 
   try {
     const people = await notionService.listPeople(DATABASE_ID);
+
+    if (people && people.length > 0) {
+      const targetPerson = people.find((p) => p.name === "Eduarda Vieira");
+
+      if (targetPerson) {
+        console.log("🔬 RAIO-X DAS PROPRIEDADES (DADOS BRUTOS DO NOTION):");
+        console.log(targetPerson.rawProperties);
+
+        console.log("✅ TESTE DE INTEGRIDADE - REGISTRO 'Eduarda Vieira':");
+        console.log("---------------------------------------------------");
+        console.log(`👤 Nome: ${targetPerson.name}`);
+        console.log(`📊 Status: ${targetPerson.status}`);
+        console.log(
+          `📱 WhatsApp: ${targetPerson.whatsappLink || "Não informado"}`,
+        );
+        console.log(
+          `📸 Instagram: ${targetPerson.instagramLink || "Não informado"}`,
+        );
+        console.log("---------------------------------------------------");
+      } else {
+        console.log(
+          "⚠️  TESTE: A pessoa 'Eduarda Vieira' não foi encontrada nos resultados do Notion.",
+        );
+      }
+    } else {
+      console.log("⚠️  A busca no Notion não retornou nenhum registro.");
+    }
+
     return NextResponse.json(people);
   } catch (error) {
     console.error("Error fetching people:", error);
