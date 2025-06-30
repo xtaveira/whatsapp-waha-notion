@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notionService } from "@/lib/services/notionService";
 
-const DATABASE_ID = "1fd974a372fd804fa1add9bdcca40405";
+const DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
 export async function GET(req: NextRequest) {
+  if (!DATABASE_ID) {
+    throw new Error("NOTION_DATABASE_ID is not set");
+  }
+
   try {
     const people = await notionService.listPeople(DATABASE_ID);
     return NextResponse.json(people);

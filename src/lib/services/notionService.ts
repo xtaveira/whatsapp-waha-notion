@@ -1,13 +1,12 @@
 import { Client } from "@notionhq/client";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import { notion } from "../clients/notion";
 
 class NotionService {
   private notion: Client;
 
   constructor() {
-    this.notion = new Client({
-      auth: "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",
-    });
+    this.notion = notion;
   }
 
   public async queryDatabase(databaseId: string) {

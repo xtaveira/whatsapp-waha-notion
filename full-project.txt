@@ -1,0 +1,862 @@
+Projeto: whatsapp-waha-notion
+Gerado em: Mon Jun 30 2025 08:24:44 GMT-0300 (Brasilia Standard Time)
+
+// --- INÍCIO DO ARQUIVO: components.json ---
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/app/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+// --- FIM DO ARQUIVO: components.json ---
+
+// --- INÍCIO DO ARQUIVO: envConfig.ts ---
+import { loadEnvConfig } from "@next/env";
+
+const projectDir = process.cwd();
+loadEnvConfig(projectDir);
+
+// --- FIM DO ARQUIVO: envConfig.ts ---
+
+// --- INÍCIO DO ARQUIVO: eslint.config.mjs ---
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+];
+
+export default eslintConfig;
+
+// --- FIM DO ARQUIVO: eslint.config.mjs ---
+
+// --- INÍCIO DO ARQUIVO: next.config.ts ---
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+// --- FIM DO ARQUIVO: next.config.ts ---
+
+// --- INÍCIO DO ARQUIVO: next-env.d.ts ---
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+// --- FIM DO ARQUIVO: next-env.d.ts ---
+
+// --- INÍCIO DO ARQUIVO: package.json ---
+{
+  "name": "whatsapp-panel",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@next/env": "^15.4.0-canary.51",
+    "@notionhq/client": "^3.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.511.0",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.3.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.3.0",
+    "typescript": "^5"
+  }
+}
+
+// --- FIM DO ARQUIVO: package.json ---
+
+// --- INÍCIO DO ARQUIVO: postcss.config.mjs ---
+const config = {
+  plugins: ["@tailwindcss/postcss"],
+};
+
+export default config;
+
+// --- FIM DO ARQUIVO: postcss.config.mjs ---
+
+// --- INÍCIO DO ARQUIVO: tsconfig.json ---
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+// --- FIM DO ARQUIVO: tsconfig.json ---
+
+// --- INÍCIO DO ARQUIVO: README.md ---
+# whatsapp-panel with notion api and waha
+
+## Configure the api (waha with docker)
+
+First, install deps and run the docker image:
+
+```bash
+docker pull devlikeapro/waha
+
+docker run -d --rm -p 3001:3000/tcp --name waha devlikeapro/waha
+```
+
+## Getting Started
+
+First, install deps and run the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs)
+
+// --- FIM DO ARQUIVO: README.md ---
+
+// --- INÍCIO DO ARQUIVO: src/lib/utils.ts ---
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// --- FIM DO ARQUIVO: src/lib/utils.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/lib/config.ts ---
+export const baseUrl = process.env.WAHA_URL || "http://localhost:3001/api";
+
+// --- FIM DO ARQUIVO: src/lib/config.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/lib/clients/notion.ts ---
+import { Client } from "@notionhq/client";
+
+export const notion = new Client({
+  auth: process.env.NOTION_API_KEY,
+});
+
+// --- FIM DO ARQUIVO: src/lib/clients/notion.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/lib/services/messageService.ts ---
+import { baseUrl } from "../config";
+
+class MessageService {
+  public async sendMessage(chatId: string, text: string) {
+    try {
+      const res = await fetch(`${baseUrl}/sendText`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatId,
+          text,
+          session: "default",
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("WAHA API error");
+      }
+
+      return await res.json();
+    } catch (error) {
+      console.error("Error sending message to WAHA:", error);
+      throw error;
+    }
+  }
+}
+
+export const messageService = new MessageService();
+
+// --- FIM DO ARQUIVO: src/lib/services/messageService.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/lib/services/notionService.ts ---
+import { Client } from "@notionhq/client";
+import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import { notion } from "../clients/notion";
+
+class NotionService {
+  private notion: Client;
+
+  constructor() {
+    this.notion = notion;
+  }
+
+  public async queryDatabase(databaseId: string) {
+    try {
+      const response = await this.notion.databases.query({
+        database_id: databaseId,
+      });
+      return response;
+    } catch (error) {
+      console.error("Error querying Notion:", error);
+      throw error;
+    }
+  }
+
+  public async listPeople(databaseId: string) {
+    const response = await this.queryDatabase(databaseId);
+
+    return response.results
+      .filter((page): page is PageObjectResponse => "properties" in page)
+      .map((page) => {
+        const props = page.properties;
+
+        const nameProp = props["Nome Inteiro"];
+        const statusProp = props["Status"];
+        const groupsProp = props["Groups"];
+        const whatsappProp = props["WhatsApp"];
+        const instagramProp = props["Instagram"];
+
+        const name =
+          nameProp?.type === "title"
+            ? nameProp.title.map((t) => t.plain_text).join("")
+            : "No Name";
+
+        const status =
+          statusProp?.type === "select"
+            ? statusProp.select?.name || "Unknown"
+            : "Unknown";
+
+        // Assume groups é uma multi_select
+        const groups =
+          groupsProp?.type === "multi_select"
+            ? groupsProp.multi_select.map((g) => g.name)
+            : [];
+
+        const whatsappLink =
+          whatsappProp?.type === "url"
+            ? whatsappProp.url || undefined
+            : undefined;
+
+        const instagramLink =
+          instagramProp?.type === "url"
+            ? instagramProp.url || undefined
+            : undefined;
+
+        return {
+          name,
+          status,
+          groups,
+          whatsappLink,
+          instagramLink,
+        };
+      });
+  }
+}
+
+export const notionService = new NotionService();
+
+// --- FIM DO ARQUIVO: src/lib/services/notionService.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/app/globals.css ---
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+// --- FIM DO ARQUIVO: src/app/globals.css ---
+
+// --- INÍCIO DO ARQUIVO: src/app/layout.tsx ---
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
+  );
+}
+
+// --- FIM DO ARQUIVO: src/app/layout.tsx ---
+
+// --- INÍCIO DO ARQUIVO: src/app/components/Notion.tsx ---
+"use client";
+
+import { useState } from "react";
+import { messageService } from "../services/message";
+import { notionService } from "../services/notion";
+
+export function Notion() {
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    setStatus("");
+
+    try {
+      const message = `notion - ${new Date().toLocaleTimeString()}`;
+      await notionService.getDatabaseInfo("asdiasd");
+      setStatus("Mensagem enviada com sucesso!");
+    } catch (err) {
+      console.error(err);
+      setStatus("Erro ao enviar.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="p-2 bg-blue-500 text-white rounded"
+      >
+        {loading ? "Enviando..." : "NOTION"}
+      </button>
+      {status && <p className="mt-2 text-sm">{status}</p>}
+    </div>
+  );
+}
+
+// --- FIM DO ARQUIVO: src/app/components/Notion.tsx ---
+
+// --- INÍCIO DO ARQUIVO: src/app/components/SendMessage.tsx ---
+"use client";
+
+import { useState } from "react";
+import { messageService } from "../services/message";
+
+export function SendMessage() {
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    setStatus("");
+
+    try {
+      const message = `Mensagem com WAHA - ${new Date().toLocaleTimeString()}`;
+      await messageService.sendMessage(message);
+      setStatus("Mensagem enviada com sucesso!");
+    } catch (err) {
+      console.error(err);
+      setStatus("Erro ao enviar.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="p-2 bg-blue-500 text-white rounded"
+      >
+        {loading ? "Enviando..." : "Enviar mensagem"}
+      </button>
+      {status && <p className="mt-2 text-sm">{status}</p>}
+    </div>
+  );
+}
+
+// --- FIM DO ARQUIVO: src/app/components/SendMessage.tsx ---
+
+// --- INÍCIO DO ARQUIVO: src/app/page.tsx ---
+"use client";
+
+import React, { useEffect, useState } from "react";
+
+type Person = {
+  name: string;
+  status: string;
+  groups: string[];
+  whatsappLink?: string;
+  instagramLink?: string;
+};
+
+function extractPhoneNumber(whatsappLink?: string) {
+  if (!whatsappLink) return "No number";
+  const match = whatsappLink.match(/phone=\+?(\d+)/);
+  return match ? match[1] : "No number";
+}
+
+export default function HomePage() {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/people")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data) => {
+        setPeople(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p>Loading people...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">People List</h1>
+      <table className="w-full table-auto border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border border-gray-300 px-3 py-2">Name</th>
+            <th className="border border-gray-300 px-3 py-2">Status</th>
+            <th className="border border-gray-300 px-3 py-2">Groups</th>
+            <th className="border border-gray-300 px-3 py-2">
+              WhatsApp Number
+            </th>
+            <th className="border border-gray-300 px-3 py-2">Instagram</th>
+          </tr>
+        </thead>
+        <tbody>
+          {people.map(
+            ({ name, status, groups, whatsappLink, instagramLink }) => (
+              <tr key={name} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-3 py-2">{name}</td>
+                <td className="border border-gray-300 px-3 py-2">{status}</td>
+                <td className="border border-gray-300 px-3 py-2">
+                  {groups.join(", ")}
+                </td>
+                <td className="border border-gray-300 px-3 py-2">
+                  {extractPhoneNumber(whatsappLink)}
+                </td>
+                <td className="border border-gray-300 px-3 py-2">
+                  {instagramLink ? (
+                    <a
+                      href={instagramLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Instagram
+                    </a>
+                  ) : (
+                    "No Instagram"
+                  )}
+                </td>
+              </tr>
+            ),
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// --- FIM DO ARQUIVO: src/app/page.tsx ---
+
+// --- INÍCIO DO ARQUIVO: src/app/people/page.tsx ---
+"use client";
+
+import React, { useEffect, useState } from "react";
+
+type Person = {
+  id: string;
+  name: string;
+  url: string;
+};
+
+export default function PeoplePage() {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchPeople() {
+      try {
+        const res = await fetch("/api/people");
+        if (!res.ok) throw new Error("Failed to fetch people");
+        const data: Person[] = await res.json();
+        setPeople(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPeople();
+  }, []);
+
+  function extractWhatsAppNumber(url: string) {
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname.includes("wa.me")) {
+        return parsedUrl.pathname.replace("/", "");
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }
+
+  if (loading) return <p className="p-4">Loading people...</p>;
+  if (error) return <p className="p-4 text-red-500">Error: {error}</p>;
+
+  return (
+    <main className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">People List</h1>
+      <ul className="space-y-2">
+        {people.map(({ id, name, url }) => (
+          <li key={id}>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {extractWhatsAppNumber(url)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+
+// --- FIM DO ARQUIVO: src/app/people/page.tsx ---
+
+// --- INÍCIO DO ARQUIVO: src/app/services/message.ts ---
+export const messageService = {
+  async sendMessage(text: string) {
+    const res = await fetch("/api/message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chatId: "554488208778@c.us",
+        text,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Erro ao enviar mensagem");
+    }
+
+    return await res.json();
+  },
+};
+
+// --- FIM DO ARQUIVO: src/app/services/message.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/app/services/notion.ts ---
+export const notionService = {
+  async getDatabaseInfo(databaseId: string) {
+    const url = `/api/notion?databaseId=${encodeURIComponent(databaseId)}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json", // Opcional no GET, mas ok manter
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Erro ao buscar informações do Notion");
+    }
+
+    return await res.json();
+  },
+};
+
+// --- FIM DO ARQUIVO: src/app/services/notion.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/app/api/people/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { notionService } from "@/lib/services/notionService";
+
+const DATABASE_ID = process.env.NOTION_DATABASE_ID;
+
+export async function GET(req: NextRequest) {
+  if (!DATABASE_ID) {
+    throw new Error("NOTION_DATABASE_ID is not set");
+  }
+
+  try {
+    const people = await notionService.listPeople(DATABASE_ID);
+    return NextResponse.json(people);
+  } catch (error) {
+    console.error("Error fetching people:", error);
+    return NextResponse.json(
+      {
+        error: (error as Error).message || "Failed to fetch people from Notion",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// --- FIM DO ARQUIVO: src/app/api/people/route.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/app/api/notion/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { notionService } from "@/lib/services/notionService";
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    const databaseId = searchParams.get("databaseId");
+
+    if (!databaseId) {
+      return NextResponse.json(
+        { error: "Parâmetro 'databaseId' é obrigatório" },
+        { status: 400 },
+      );
+    }
+
+    const result = await notionService.queryDatabase(databaseId);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Erro ao consultar Notion:", error);
+    return NextResponse.json(
+      { error: "Erro ao consultar Notion" },
+      { status: 500 },
+    );
+  }
+}
+
+// --- FIM DO ARQUIVO: src/app/api/notion/route.ts ---
+
+// --- INÍCIO DO ARQUIVO: src/app/api/message/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { messageService } from "@/lib/services/messageService";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { chatId = "554488208778@c.us", text } = body;
+
+    const result = await messageService.sendMessage(chatId, text);
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Erro ao enviar mensagem" },
+      { status: 500 },
+    );
+  }
+}
+
+// --- FIM DO ARQUIVO: src/app/api/message/route.ts ---
+
